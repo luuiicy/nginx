@@ -1,6 +1,6 @@
-# nginx-custom
+# 自构建 docker nginx 镜像
 
-使用 nginx 源码编译构建自定义镜像，并通过 GitHub Actions 自动推送到 GitHub Container Registry (ghcr.io)。
+使用 nginx 源码编译构建自定义镜像，并通过 GitHub Actions 自动推送到 GitHub Container Registry (ghcr.io) 和 Docker Hub。
 
 ## 启用的模块
 
@@ -43,6 +43,8 @@
 |---|---|---|
 | `MAXMIND_ACCOUNT_ID` | MaxMind 账号 ID | 登录 [maxmind.com](https://www.maxmind.com) → Account → Account ID |
 | `MAXMIND_LICENSE_KEY` | MaxMind License Key | 登录 maxmind.com → My License Key → Generate new key |
+| `DOCKERHUB_USERNAME` | Docker Hub 用户名 | Docker Hub 账号名 |
+| `DOCKERHUB_TOKEN` | Docker Hub Access Token | Docker Hub → Account settings → Personal access tokens |
 
 ### 2. GitHub Packages 可见性
 
@@ -75,24 +77,144 @@ real_ip_recursive on;
 
 | 触发方式 | 行为 |
 |---|---|
-| push 到 main | 构建并推送，打 `latest` 和 `sha-*` 标签 |
-| 打 `v*` tag | 构建并推送，打语义化版本标签 |
+| push 到 main | 构建并推送到 GHCR / Docker Hub，打 `latest` 和 `sha-*` 标签 |
+| 打 `v*` tag | 构建并推送到 GHCR / Docker Hub，打语义化版本标签 |
 | Pull Request | 仅构建，不推送 |
 | 手动触发 | 可指定 nginx 版本号 |
 
-## 本地构建
+## 本地构建与推送
+
+### 1. 本地单平台构建
+
+默认构建当前机器平台的镜像，不打包 GeoIP2 数据库：
 
 ```bash
-docker build --build-arg NGINX_VERSION=1.26.3 -t nginx-custom .
+docker build \
+  --build-arg NGINX_VERSION=1.26.3 \
+  -t luuiicy/nginx:latest \
+  .
 ```
 
 本地如需把 GeoIP2 数据库打进镜像，需使用 BuildKit secret 传入 MaxMind 凭据：
 
 ```bash
+export MAXMIND_ACCOUNT_ID=your_maxmind_account_id
+export MAXMIND_LICENSE_KEY=your_maxmind_license_key
+
 docker build \
   --build-arg NGINX_VERSION=1.26.3 \
   --build-arg GEOIP_REQUIRED=true \
   --secret id=mm_account_id,env=MAXMIND_ACCOUNT_ID \
   --secret id=mm_license_key,env=MAXMIND_LICENSE_KEY \
-  -t nginx-custom .
+  -t luuiicy/nginx:latest \
+  .
+```
+
+本地运行验证：
+
+```bash
+docker run --rm -p 8080:80 luuiicy/nginx:latest
+```
+
+访问 `http://localhost:8080`，默认首页会显示服务器 IP。
+
+### 2. 推送到 Docker Hub
+
+`luuiicy/nginx:latest` 默认对应 Docker Hub 的 `luuiicy/nginx` 仓库：
+
+```bash
+docker login
+docker push luuiicy/nginx:latest
+```
+
+其他机器拉取和运行：
+
+```bash
+docker pull luuiicy/nginx:latest
+
+docker run -d --name nginx \
+  --restart unless-stopped \
+  -p 80:80 \
+  -p 443:443 \
+  -p 443:443/udp \
+  luuiicy/nginx:latest
+```
+
+### 3. 推送到私有仓库
+
+假设私有仓库地址是 `xsfsadfas.com`：
+
+```bash
+docker login xsfsadfas.com
+
+docker tag luuiicy/nginx:latest xsfsadfas.com/luuiicy/nginx:latest
+docker push xsfsadfas.com/luuiicy/nginx:latest
+```
+
+也可以构建时直接打私有仓库标签：
+
+```bash
+docker build \
+  --build-arg NGINX_VERSION=1.26.3 \
+  -t xsfsadfas.com/luuiicy/nginx:latest \
+  .
+```
+
+### 4. 本地多平台构建并推送
+
+多平台镜像建议直接推送到镜像仓库，因为 `--load` 通常只能把单个平台加载进本地 Docker。
+
+先创建并启用 buildx builder：
+
+```bash
+docker buildx create --name multiarch-builder --use
+docker buildx inspect --bootstrap
+```
+
+构建并推送 `linux/amd64` 和 `linux/arm64`：
+
+```bash
+docker login xsfsadfas.com
+
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --build-arg NGINX_VERSION=1.26.3 \
+  --build-arg GEOIP_REQUIRED=true \
+  --secret id=mm_account_id,env=MAXMIND_ACCOUNT_ID \
+  --secret id=mm_license_key,env=MAXMIND_LICENSE_KEY \
+  -t xsfsadfas.com/luuiicy/nginx:latest \
+  --push \
+  .
+```
+
+检查多平台 manifest：
+
+```bash
+docker buildx imagetools inspect xsfsadfas.com/luuiicy/nginx:latest
+```
+
+如果只想分别构建到本地测试，可以单独构建某一个平台：
+
+```bash
+docker buildx build \
+  --platform linux/amd64 \
+  --build-arg NGINX_VERSION=1.26.3 \
+  --build-arg GEOIP_REQUIRED=true \
+  --secret id=mm_account_id,env=MAXMIND_ACCOUNT_ID \
+  --secret id=mm_license_key,env=MAXMIND_LICENSE_KEY \
+  -t luuiicy/nginx:amd64 \
+  --load \
+  .
+```
+
+```bash
+docker buildx build \
+  --platform linux/arm64 \
+  --build-arg NGINX_VERSION=1.26.3 \
+  --build-arg GEOIP_REQUIRED=true \
+  --secret id=mm_account_id,env=MAXMIND_ACCOUNT_ID \
+  --secret id=mm_license_key,env=MAXMIND_LICENSE_KEY \
+  -t luuiicy/nginx:arm64 \
+  --load \
+  .
 ```
