@@ -51,7 +51,9 @@ RUN apk add --no-cache wget && \
     mkdir -p /geoip && \
     for edition in GeoLite2-Country GeoLite2-City; do \
         wget -qO "/tmp/${edition}.tar.gz" \
-            "https://download.maxmind.com/app/geoip_download?edition_id=${edition}&account_id=${MAXMIND_ACCOUNT_ID}&license_key=${MAXMIND_LICENSE_KEY}&suffix=tar.gz" && \
+            "https://download.maxmind.com/geoip/databases/${edition}/download?suffix=tar.gz" \
+            --user="${MAXMIND_ACCOUNT_ID}" \
+            --password="${MAXMIND_LICENSE_KEY}" && \
         tar -xzf "/tmp/${edition}.tar.gz" --wildcards "*.mmdb" --strip-components=1 -C /geoip; \
     done
 
