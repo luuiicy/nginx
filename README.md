@@ -46,13 +46,13 @@
 | `DOCKERHUB_USERNAME` | Docker Hub 用户名 | Docker Hub 账号名 |
 | `DOCKERHUB_TOKEN` | Docker Hub Access Token | Docker Hub → Account settings → Personal access tokens |
 
-如 Docker Hub 镜像名不是默认的 `luuiicy/nginx`，在 **Settings → Secrets and variables → Actions → Variables** 中添加：
+如需推送到 Docker Hub，还需在 **Settings → Secrets and variables → Actions → Variables** 中添加：
 
 | Variable 名称 | 说明 | 示例 |
 |---|---|---|
 | `DOCKERHUB_IMAGE` | Docker Hub 镜像名，格式为 `<namespace>/<repository>` | `yourname/nginx` |
 
-Docker Hub 上需提前存在对应仓库，且 `DOCKERHUB_TOKEN` 需要有该仓库的 Read & Write 权限。
+Docker Hub 上需提前存在对应仓库，且 `DOCKERHUB_TOKEN` 需要有该仓库的 Read & Write 权限。未配置 `DOCKERHUB_IMAGE` 时，Actions 只会推送到 GHCR。
 
 ### 2. GitHub Packages 可见性
 
