@@ -60,6 +60,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             NGINX_VERSION=${{ github.event.inputs.nginx_version || '1.26.3' }}
+            GEOIP_REQUIRED=true
           secrets: |
             mm_account_id=${{ secrets.MAXMIND_ACCOUNT_ID }}
             mm_license_key=${{ secrets.MAXMIND_LICENSE_KEY }}
