@@ -60,8 +60,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             NGINX_VERSION=${{ github.event.inputs.nginx_version || '1.26.3' }}
-            MAXMIND_ACCOUNT_ID=${{ secrets.MAXMIND_ACCOUNT_ID }}
-            MAXMIND_LICENSE_KEY=${{ secrets.MAXMIND_LICENSE_KEY }}
+          secrets: |
+            mm_account_id=${{ secrets.MAXMIND_ACCOUNT_ID }}
+            mm_license_key=${{ secrets.MAXMIND_LICENSE_KEY }}
           no-cache-filters: geoip
           cache-from: type=gha
           cache-to: type=gha,mode=max

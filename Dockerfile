@@ -47,12 +47,13 @@ FROM alpine:3.19 AS geoip
 ARG MAXMIND_ACCOUNT_ID
 ARG MAXMIND_LICENSE_KEY
 
-RUN apk add --no-cache curl && \
+RUN --mount=type=secret,id=mm_account_id \
+    --mount=type=secret,id=mm_license_key \
+    apk add --no-cache curl && \
     mkdir -p /geoip && \
-    echo "ACCOUNT_ID=${MAXMIND_ACCOUNT_ID}" && \
     for edition in GeoLite2-Country GeoLite2-City; do \
-        curl -v \
-            -u "${MAXMIND_ACCOUNT_ID}:${MAXMIND_LICENSE_KEY}" \
+        curl -fsSL \
+            -u "$(cat /run/secrets/mm_account_id):$(cat /run/secrets/mm_license_key)" \
             "https://download.maxmind.com/geoip/databases/${edition}/download?suffix=tar.gz" \
             -o "/tmp/${edition}.tar.gz" && \
         tar -xzf "/tmp/${edition}.tar.gz" --wildcards "*.mmdb" --strip-components=1 -C /geoip; \
