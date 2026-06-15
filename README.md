@@ -45,6 +45,8 @@
 | `MAXMIND_LICENSE_KEY` | MaxMind License Key | 登录 maxmind.com → My License Key → Generate new key |
 | `DOCKERHUB_USERNAME` | Docker Hub 用户名 | Docker Hub 账号名 |
 | `DOCKERHUB_TOKEN` | Docker Hub Access Token | Docker Hub → Account settings → Personal access tokens |
+| `OCIR_USERNAME` | Oracle Cloud Container Registry 登录用户名 | 通常为 `<tenancy-namespace>/<oci-username>`，身份域用户可能为 `<tenancy-namespace>/<domain>/<username>` |
+| `OCIR_AUTH_TOKEN` | Oracle Cloud Auth Token | OCI Console → User settings → Auth tokens |
 
 如需推送到 Docker Hub，还需在 **Settings → Secrets and variables → Actions → Variables** 中添加：
 
@@ -53,6 +55,19 @@
 | `DOCKERHUB_IMAGE` | Docker Hub 镜像名，格式为 `<namespace>/<repository>` | `yourname/nginx` |
 
 Docker Hub 上需提前存在对应仓库，且 `DOCKERHUB_TOKEN` 需要有该仓库的 Read & Write 权限。未配置 `DOCKERHUB_IMAGE` 时，Actions 只会推送到 GHCR。
+
+如需推送到 Oracle Cloud Container Registry，迪拜区域已固定为 `me-dubai-1.ocir.io`，还需添加：
+
+| Variable 名称 | 说明 | 示例 |
+|---|---|---|
+| `OCIR_NAMESPACE` | OCI Tenancy namespace | `axxxxxx1abcd` |
+| `OCIR_REPOSITORY` | OCIR 仓库名，未配置时默认 `nginx` | `nginx` |
+
+最终镜像地址格式：
+
+```text
+me-dubai-1.ocir.io/<OCIR_NAMESPACE>/<OCIR_REPOSITORY>:latest
+```
 
 ### 2. GitHub Packages 可见性
 
