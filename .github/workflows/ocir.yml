@@ -12,8 +12,8 @@ on:
         default: "1.26.3"
 
 env:
-  OCIR_REGISTRY: me-dubai-1.ocir.io
-  OCIR_NAMESPACE: ${{ vars.OCIR_NAMESPACE }}
+  OCIR_REGISTRY: dxb.ocir.io
+  OCIR_NAMESPACE: ${{ vars.OCIR_NAMESPACE || 'axri7n8wrh6j' }}
   OCIR_REPOSITORY: ${{ vars.OCIR_REPOSITORY || 'nginx' }}
 
 jobs:
@@ -67,7 +67,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            NGINX_VERSION=${{ github.event.inputs.nginx_version || '1.26.3' }}
+            NGINX_VERSION=${{ inputs.nginx_version || '1.26.3' }}
             GEOIP_REQUIRED=true
           secrets: |
             mm_account_id=${{ secrets.MAXMIND_ACCOUNT_ID }}
