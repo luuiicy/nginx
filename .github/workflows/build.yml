@@ -60,7 +60,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Extract Docker Hub metadata
         id: meta-dockerhub
@@ -74,7 +74,19 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Show image targets
+        run: |
+          echo "GHCR image: $REGISTRY/$IMAGE_NAME"
+          if [ -n "$DOCKERHUB_IMAGE" ]; then
+            echo "Docker Hub image: $DOCKERHUB_IMAGE"
+          else
+            echo "Docker Hub image: not configured"
+          fi
+          echo "Tags:"
+          printf '%s\n' "${{ steps.meta-ghcr.outputs.tags }}"
+          printf '%s\n' "${{ steps.meta-dockerhub.outputs.tags }}"
 
       - name: Build and push
         uses: docker/build-push-action@v5
