@@ -96,7 +96,9 @@ FROM alpine:3.19
 
 RUN apk add --no-cache pcre2 openssl zlib tzdata libmaxminddb && \
     addgroup -S nginx && adduser -S -G nginx nginx && \
-    mkdir -p /var/log/nginx /var/cache/nginx /etc/nginx/geoip && \
+    mkdir -p /var/log/nginx /var/cache/nginx /etc/nginx/geoip \
+        /etc/nginx/conf.d /etc/nginx/sites-available /etc/nginx/sites-enabled \
+        /etc/nginx/certs && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
 
@@ -104,6 +106,10 @@ COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=builder /etc/nginx /etc/nginx
 COPY --from=geoip --chown=nginx:nginx /geoip/ /etc/nginx/geoip/
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY conf.d/ /etc/nginx/conf.d/
+COPY sites-available/ /etc/nginx/sites-available/
+COPY sites-enabled/ /etc/nginx/sites-enabled/
+COPY certs/ /etc/nginx/certs/
 COPY html/index.html /etc/nginx/html/index.html
 
 EXPOSE 80 443 443/udp

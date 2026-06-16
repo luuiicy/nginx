@@ -82,6 +82,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
+          provenance: false
+          sbom: false
           tags: |
             ${{ steps.meta-ghcr.outputs.tags }}
             ${{ steps.meta-dockerhub.outputs.tags }}
