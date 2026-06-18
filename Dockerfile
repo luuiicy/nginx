@@ -18,8 +18,9 @@ RUN apk add --no-cache \
 RUN wget https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
     tar -zxf nginx-${NGINX_VERSION}.tar.gz
 
-# 下载 ngx_http_geoip2_module 第三方模块
-RUN git clone https://github.com/leev/ngx_http_geoip2_module.git
+# 下载第三方模块
+RUN git clone https://github.com/leev/ngx_http_geoip2_module.git && \
+    git clone https://github.com/openresty/headers-more-nginx-module.git
 
 RUN cd nginx-${NGINX_VERSION} && \
     ./configure \
@@ -57,6 +58,7 @@ RUN cd nginx-${NGINX_VERSION} && \
         --with-mail_ssl_module \
         --with-pcre \
         --add-module=../ngx_http_geoip2_module \
+        --add-module=../headers-more-nginx-module \
     && make -j$(nproc) && make install
 
 # GeoIP2 下载阶段
